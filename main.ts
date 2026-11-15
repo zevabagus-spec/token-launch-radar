@@ -1,7 +1,9 @@
 // Token Radar: a token-radar-01 entry (Node 22, standard library only).
 //
 // Reads the sealed snapshot from /input/snapshot.json (or --input <file|dir>),
-// scores every pre-token protocol with the peer-median model in lib/model.ts,
+// fits a comps curve to the snapshot's own priced peers in lib/model.ts, tests
+// the curve blind on held-out peers, scores every pre-token protocol, nets each
+// row's farm plan to a FARM / THIN / SKIP verdict from its own farm economics,
 // writes the ranked board to /output/board.json and the dashboard's dataset to
 // /output/data.js, copies this repository's dashboard/ and screenshots/ to
 // /output, and writes /output/dossier.json with the vendored make.fun library.
@@ -89,5 +91,7 @@ writeFileSync(join(out, 'dossier.json'), buildDossier(out, { text_max_bytes: TEX
 
 process.stdout.write(
   `token radar: ${snapshot.protocols.length} protocols, ${snapshot.watchlist.length} on the watchlist, ${board.length} rows scored (${radar.early_size} early, ${radar.live_size} live set aside)\n` +
+    `token radar: comps curve on ${radar.fit.peers} priced peers (log10 mcap = ${radar.fit.intercept.toFixed(3)} + ${radar.fit.slope.toFixed(3)} x log10 tvl, R2 ${radar.fit.r_squared.toFixed(3)}); blind test median error x${radar.blind.median_factor.toFixed(2)} vs baseline x${radar.blind.baseline_median_factor.toFixed(2)}\n` +
+    `token radar: verdicts FARM ${radar.verdict_counts.FARM} / THIN ${radar.verdict_counts.THIN} / SKIP ${radar.verdict_counts.SKIP}\n` +
     `token radar: wrote ${join(out, 'board.json')}, ${join(out, 'data.js')}, ${join(out, 'dashboard')} (${dashboardFiles.length} files), ${join(out, 'screenshots')} (${shots.length} images) and ${join(out, 'dossier.json')}\n`,
 );

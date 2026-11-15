@@ -4,7 +4,7 @@
 [![rank](https://make.fun/badge/token-radar-01/zevabagus-spec/token-launch-radar/rank.svg)](https://make.fun/bounty/token-radar-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
 [![reward](https://make.fun/badge/token-radar-01/zevabagus-spec/token-launch-radar/reward.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
 
-Token Launch Radar ranks 200 pre-token protocols by an implied launch value derived from the snapshot's own market — category peer multiples, seven-day growth and tenure with no token — and pairs each row with a concrete farm plan. A static, no-network dashboard renders the board, a per-protocol detail view, and search, category and chain filters.
+Token Launch Radar ranks 200 pre-token protocols by an implied launch value from a comps curve fitted to the snapshot's own priced peers — least squares on log market cap vs log TVL, with shrunk category adjustments — tested blind on held-out peers before it prices anything, and nets every row to a FARM, THIN or SKIP verdict from its own farm economics, each with a costed farm plan that adapts to the verdict. A static, no-network dashboard renders the board, a per-protocol detail view, and search, category, chain and verdict filters; the page refits the curve and recomputes every row from the same figures, so the screenshots, the code and the board agree.
 
 ## Run it
 
