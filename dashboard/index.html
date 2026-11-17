@@ -3,14 +3,109 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Launch Radar: pre-token protocols ranked by a blind-tested comps curve, each netted to FARM, THIN or SKIP</title>
-<meta name="description" content="A radar for protocol token launches: 200 pre-token protocols ranked by an implied value from a comps curve fitted to the snapshot's own priced peers and tested blind, each with a costed farm plan netted to a FARM, THIN or SKIP verdict.">
+<title>Token Launch Radar — pre-token protocols ranked by implied value</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<a class="skip" href="#board">Skip to the board</a>
-<main id="board" tabindex="-1" aria-busy="true"></main>
+<header class="hero">
+  <p class="eyebrow">Pre-token radar · snapshot <span data-field="asOf"></span></p>
+  <h1>Token Launch Radar</h1>
+  <p class="lede">Every protocol in the snapshot that <strong>records no token</strong>, ranked by what a token might be worth if one launched — priced from the protocols that already trade, never from a hardcoded list. Protocols the screen sets aside are listed with their reasons, so the whole snapshot is accounted for.</p>
+  <div class="stats" role="list">
+    <div class="stat" role="listitem"><span class="num" data-field="watchlistCover"></span><span class="lbl">watchlist covered</span></div>
+    <div class="stat" role="listitem"><span class="num" data-field="rankedCount"></span><span class="lbl">pre-token protocols ranked</span></div>
+    <div class="stat" role="listitem"><span class="num" data-field="setAsideCount"></span><span class="lbl">set aside, with reasons</span></div>
+    <div class="stat" role="listitem"><span class="num" data-field="blindError"></span><span class="lbl">held-out blind-test error</span></div>
+    <div class="stat" role="listitem"><span class="num" data-field="baselineError"></span><span class="lbl">flat-baseline error, same folds</span></div>
+  </div>
+  <p class="accounting" data-field="accounting"></p>
+</header>
+
+<main>
+  <section class="controls" aria-label="Filter and sort the board">
+    <label>Search <input id="q" type="search" placeholder="Protocol or slug" autocomplete="off"></label>
+    <label>Category <select id="cat"><option value="">All categories</option></select></label>
+    <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+    <label>Verdict <select id="verdict"><option value="">All verdicts</option><option>FARM</option><option>THIN</option><option>SKIP</option></select></label>
+    <label>Sort <select id="sort"><option value="value">Implied value</option><option value="tvl">TVL</option><option value="growth">7-day growth</option><option value="efficiency">Farm efficiency</option><option value="name">Name A–Z</option></select></label>
+    <p class="count" id="count" aria-live="polite"></p>
+  </section>
+
+  <nav class="tabs" aria-label="Views">
+    <button type="button" data-tab="pre" class="active">Pre-token board</button>
+    <button type="button" data-tab="aside">Set aside</button>
+    <button type="button" data-tab="live">Already trade</button>
+  </nav>
+
+  <section id="view-pre">
+    <table class="board">
+      <thead><tr>
+        <th scope="col">Rank</th><th scope="col">Protocol</th><th scope="col">Category</th>
+        <th scope="col">TVL</th><th scope="col">7d</th><th scope="col">Implied value</th>
+        <th scope="col">Multiple</th><th scope="col">Verdict</th><th scope="col">Detail</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="emptyPre" hidden>No protocol matches these filters. Clear the search or widen the filters.</p>
+  </section>
+
+  <section id="view-aside" hidden>
+    <p class="note">These protocols record no token but are <strong>not</strong> ranked: each failed the watchlist screen on the snapshot's own fields, or sits above the floor without being on the watchlist. The reason is stated per protocol — nothing is dropped silently.</p>
+    <table class="board">
+      <thead><tr><th scope="col">Protocol</th><th scope="col">Category</th><th scope="col">TVL</th><th scope="col">Why it is set aside</th></tr></thead>
+      <tbody id="asideRows"></tbody>
+    </table>
+    <p class="empty" id="emptyAside" hidden>No set-aside protocol matches these filters.</p>
+  </section>
+
+  <section id="view-live" hidden>
+    <p class="note">The largest protocols that already record a token, by market cap. They are the comparables the value model is fitted on — they are not farm targets, and none of them appears on the pre-token board.</p>
+    <table class="board">
+      <thead><tr><th scope="col">Protocol</th><th scope="col">Category</th><th scope="col">TVL</th><th scope="col">Market cap</th><th scope="col">Token</th></tr></thead>
+      <tbody id="liveRows"></tbody>
+    </table>
+  </section>
+
+  <section class="model" aria-label="How the values are priced">
+    <h2>How the values are priced</h2>
+    <p id="modelIntro"></p>
+    <div class="modelgrid">
+      <div>
+        <h3>The comps curve</h3>
+        <p id="curveLine"></p>
+        <p id="blindLine"></p>
+        <p class="foldline" id="foldLine"></p>
+      </div>
+      <div>
+        <h3>Category adjustments</h3>
+        <p>Each category's median market-cap-per-TVL moves its predictions, shrunk toward no adjustment when the category has few priced peers. Categories with fewer than three peers get no adjustment at all.</p>
+        <div class="catgrid" id="catGrid"></div>
+      </div>
+    </div>
+    <p class="method">Growth and tenure multiply the fitted value: seven-day TVL change, clamped to −50%…+100% at half weight, and a maturity term rising from 70% at listing to 100% over three years. The blind test above scores the <em>whole</em> predictor — curve, category adjustment, growth, maturity and the 0.02×–1.50× multiple clamp — on five folds the fit never saw. A smaller multiple means the protocol's TVL is large next to what comparable tokens are worth; the clamp keeps one outlier curve from pricing any protocol above 1.50× its TVL or below 0.02×.</p>
+    <p class="method"><strong>How the screen works:</strong> a protocol is ranked only if the snapshot records no token for it and it passes the watchlist rule's checks on the snapshot's own fields — not a bridge, liquid-staking or exchange product, no version marker in its name. Above the $50M floor the watchlist itself is the rule's verdict and is followed exactly, because the full rule also sees the parent-protocol field this snapshot does not carry; below the floor the same screen on the snapshot's fields decides. Everything set aside is listed with its reason, and everything that records a token is listed separately.</p>
+    <p class="method"><strong>Reading a row:</strong> implied value is the model's answer to "what would a token be worth?"; the multiple is that value divided by TVL; the verdict compares the value with the cost of a standard farm — FARM is the top third of that efficiency, THIN the middle, SKIP the bottom third, where the plan spends nothing and names the trigger that would reopen the protocol.</p>
+  </section>
+</main>
+
+<footer>
+  <p data-field="sourceLine"></p>
+  <p>Values are model estimates from one frozen snapshot, not predictions. "Records no token" means the snapshot's token fields are empty; it is not a claim that a token will launch. Nothing here is financial advice.</p>
+</footer>
+
+<dialog id="detail" aria-labelledby="dName">
+  <form method="dialog"><button class="close" aria-label="Close detail">×</button></form>
+  <p class="eyebrow" id="dKicker"></p>
+  <h2 id="dName"></h2>
+  <p class="dmeta" id="dMeta"></p>
+  <div class="dbreak" id="dBreak"></div>
+  <p class="dpeers" id="dPeers"></p>
+  <dl class="decon" id="dEcon"></dl>
+  <h3>Farm plan</h3>
+  <ol class="dplan" id="dPlan"></ol>
+</dialog>
+
 <script src="../data.js"></script>
 <script src="app.js"></script>
 </body>
